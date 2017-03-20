@@ -2,7 +2,7 @@ var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
 var axes = {
-	x: {
+  x: {
     minVal: -10,
     maxVal: 10,
     ticks: 1,
@@ -16,9 +16,9 @@ var axes = {
   }
 }
 
-function fun1(x) { return Math.sin(x); }
+function fun1(x) { return Math.sin(x) }
 function fun2(x) { return Math.abs(x) }
-function fun3(x) { return 1.8 }
+function fun3(x) { return (Math.pow(x, 2) - x - 6) / (Math.pow(x, 2) - 1) }
 function fun4(x) { return -0.5 * Math.pow(x, 2) + 2 }
 
 function draw() {
@@ -35,23 +35,23 @@ function draw() {
 }
 
 function pix2coord(x, y) {
-	var coord = {};
-	if(x !== undefined) {
-  	coord.x = ((x / axes.x.scale) + axes.x.minVal);
+  var coord = {};
+  if(x !== undefined) {
+    coord.x = ((x / axes.x.scale) + axes.x.minVal);
   }
   if(y !== undefined) {
-  	coord.y = -((y / axes.y.scale) + axes.y.minVal);
+    coord.y = -((y / axes.y.scale) + axes.y.minVal);
   }
   return coord;
 }
 
 function coord2pix(x, y) {
-	var pix = {};
+  var pix = {};
   if(x !== undefined) {
-  	pix.x = (x - axes.x.minVal) * axes.x.scale;
+    pix.x = (x - axes.x.minVal) * axes.x.scale;
   }
   if(y !== undefined) {
-  	pix.y = ((-y) - axes.y.minVal) * axes.y.scale;
+    pix.y = ((-y) - axes.y.minVal) * axes.y.scale;
   }
   return pix;
 }
@@ -60,16 +60,16 @@ function drawFunc (func, color, thick) {
  ctx.beginPath();
  ctx.lineWidth = thick;
  ctx.strokeStyle = color;
- 
+
  for (var pix = 0; pix < canvas.width; pix++) {
   var x = pix2coord(pix, undefined).x;
   var y = func(x);
   var piy = coord2pix(undefined, y).y;
-  
+
   if(pix == 0) {
-  	ctx.moveTo(pix, piy);
+    ctx.moveTo(pix, piy);
   } else {
-  	ctx.lineTo(pix, piy);
+    ctx.lineTo(pix, piy);
   }
  }
  
@@ -77,25 +77,25 @@ function drawFunc (func, color, thick) {
 }
 
 function drawAxes() {
-	axes.x.relPos = (-axes.y.maxVal) / (axes.y.minVal - axes.y.maxVal);
+  axes.x.relPos = (-axes.y.maxVal) / (axes.y.minVal - axes.y.maxVal);
   axes.y.relPos = (-axes.x.minVal) / (axes.x.maxVal - axes.x.minVal);
-	var x = {
-  	start: {
-    	x: 0,
+  var x = {
+    start: {
+      x: 0,
       y: canvas.height * (1 - axes.x.relPos)
     },
     end: {
-    	x: canvas.width,
+      x: canvas.width,
       y: canvas.height * (1 - axes.x.relPos)
     }
   };
   var y = {
     start: {
-    	x: canvas.width * axes.y.relPos,
+      x: canvas.width * axes.y.relPos,
       y: 0
     },
     end: {
-    	x: canvas.width * axes.y.relPos,
+      x: canvas.width * axes.y.relPos,
       y: canvas.height
     }
   }
@@ -113,16 +113,16 @@ function drawAxes() {
   
   ctx.textAlign="center";
   if(axes.x.pi) {
-  	axes.x._ticks = axes.x.ticks * Math.PI;
+    axes.x._ticks = axes.x.ticks * Math.PI;
   }
   
-  var minTickX = Math.min(Math.ceil(pix2coord(0, undefined).x / axes.x.ticks), 0);
-  var maxTickX = Math.max(Math.floor(pix2coord(canvas.width, undefined).x / axes.x.ticks), 0);
+  var minTickX = Math.min(Math.ceil(pix2coord(0, undefined).x / (axes.x.ticks * (axes.x.tickFactor || 1))), 0);
+  var maxTickX = Math.max(Math.floor(pix2coord(canvas.width, undefined).x / (axes.x.ticks * (axes.x.tickFactor || 1))), 0);
   
-  for(var i = minTickX + 1; i < maxTickX; i++) {
-  	xTick = i * axes.x.ticks;
+  for(var i = minTickX - 1; i <= maxTickX + 1; i++) {
+    xTick = i * axes.x.ticks;
     if(axes.x.tickFactor) {
-    	xTick *= axes.x.tickFactor;
+      xTick *= axes.x.tickFactor;
     }
     xTickPos = coord2pix(xTick, undefined).x;
     
@@ -131,18 +131,18 @@ function drawAxes() {
     
     var xTickText = xTick;
     if(axes.x.tickFactor && axes.x.tickLabel) {
-    	xTickText = i + axes.x.tickLabel;
+      xTickText = i + axes.x.tickLabel;
     }
     ctx.fillText(xTickText, xTickPos, x.start.y + 20);
   }
   
-  var minTickY = Math.min(Math.ceil(pix2coord(undefined, canvas.height).y / axes.y.ticks), 0);
-  var maxTickY = Math.max(Math.floor(pix2coord(undefined, 0).y / axes.y.ticks), 0);
+  var minTickY = Math.min(Math.ceil(pix2coord(undefined, canvas.height).y / (axes.y.ticks * (axes.y.tickFactor || 1))), 0);
+  var maxTickY = Math.max(Math.floor(pix2coord(undefined, 0).y / (axes.y.ticks * (axes.y.tickFactor || 1))), 0);
   
-  for(var i = minTickY + 1; i < maxTickY; i++) {
-  	yTick = i * axes.y.ticks;
+  for(var i = minTickY - 1; i <= maxTickY + 1; i++) {
+    yTick = i * axes.y.ticks;
     if(axes.y.tickFactor) {
-    	yTick *= axes.y.tickFactor;
+      yTick *= axes.y.tickFactor;
     }
     yTickPos = coord2pix(undefined, yTick).y;
     
@@ -151,7 +151,7 @@ function drawAxes() {
     
     var yTickText = yTick;
     if(axes.y.tickFactor && axes.y.tickLabel) {
-    	yTickText = i + axes.y.tickLabel;
+      yTickText = i + axes.y.tickLabel;
     }
     ctx.fillText(yTickText, y.start.x + 15, yTickPos - 5);
   }
@@ -160,7 +160,7 @@ function drawAxes() {
 }
 
 function resizeGraph() {
-	canvas.width = $(canvas).parent().innerWidth();
+  canvas.width = $(canvas).parent().innerWidth();
   draw();
 }
 
@@ -168,13 +168,13 @@ $(window).on('resize', resizeGraph);
 resizeGraph();
 
 var mouse = {
-	down: false,
+  down: false,
   x: 0,
   y: 0
 }
 
 $('#canvas').mousedown(function(e) {
-	mouse.down = true;
+  mouse.down = true;
   mouse.minX = axes.x.minVal;
   mouse.maxX = axes.x.maxVal;
   mouse.minY = axes.y.minVal;
@@ -184,12 +184,12 @@ $('#canvas').mousedown(function(e) {
 });
 
 $(window).mouseup(function(e) {
-	mouse.down = false;
+  mouse.down = false;
 });
 
 $(window).mousemove(function(e){
-	if(mouse.down) {
-  	var deltaX = e.pageX - mouse.x;
+  if(mouse.down) {
+    var deltaX = e.pageX - mouse.x;
     axes.x.minVal = mouse.minX - deltaX / axes.x.scale;
     axes.x.maxVal = mouse.maxX - deltaX / axes.x.scale;
     
@@ -202,9 +202,9 @@ $(window).mousemove(function(e){
 });
 
 $('#minValX').change(function(e) {
-	console.log($(this).val());
+  console.log($(this).val());
   console.log(axes);
-	axes.x.minVal = parseInt($(this).val());
+  axes.x.minVal = parseInt($(this).val());
   console.log(axes);
   draw();
 });
