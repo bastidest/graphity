@@ -14,6 +14,15 @@ var axes = {
     maxVal: 2,
     ticks: 0.5
   },
+  scroll: {
+    x: true,
+    y: true
+  },
+  grid: {
+    x: 1,
+    y: 1,
+    color: 'rgb(200,200,200)'
+  },
   cursor: {
     x: false,
     y: true
@@ -24,8 +33,8 @@ var axes = {
         return Math.sin(x);
       },
       color: 'rgb(11,153,11)',
-      thickness: 1,
-      selthick: 2,
+      thickness: 2,
+      selthick: 3,
       bubble: true
     },
     {
@@ -33,8 +42,7 @@ var axes = {
         return Math.abs(x);
       },
       color: 'rgb(66,44,255)',
-      thickness: 1,
-      selthick: 2,
+      thickness: 2,
       bubble: false
     },
     {
@@ -42,8 +50,7 @@ var axes = {
         return Math.sin(x + Math.PI * 0.5);
       },
       color: 'rgb(255,10,10)',
-      thickness: 1,
-      selthick: 2,
+      thickness: 2,
       bubble: false
     },
     {
@@ -52,7 +59,6 @@ var axes = {
       },
       color: 'rgb(255,10,10)',
       thickness: 2,
-      selthick: 3,
       bubble: false
     },
   ]
@@ -75,13 +81,22 @@ CanvasRenderingContext2D.prototype.bubble = function (x, y, w, h, r) {
 }
 
 function draw() {
-  ctx.strokeStyle = "rgb(0,0,0)";
-  ctx.fillStyle = "rgb(0,0,0)"; 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   axes.x.scale = canvas.width / Math.abs(axes.x.minVal - axes.x.maxVal);
-  axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
 
+  if(axes.y.minVal && !axes.y.maxVal) {
+    axes.y.scale = axes.x.scale;
+    axes.y.maxVal = axes.y.minVal + canvas.height / axes.y.scale;
+  } else if (!axes.y.minVal && axes.y.maxVal) {
+    axes.y.scale = axes.x.scale;
+    axes.y.minVal = axes.y.maxVal - canvas.height / axes.y.scale;
+  } else {
+    axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
+  }
+  
+
+  drawGrid();
   drawAxes();
 
   for(var i = 0; i < axes.graphs.length; i++) {
@@ -112,6 +127,33 @@ function coord2pix(x, y) {
   return pix;
 }
 
+function drawGrid() {
+  ctx.beginPath();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = axes.grid.color;
+
+  var min = pix2coord(0, 0);
+  var max = pix2coord(canvas.width, canvas.height);
+
+  var minX = Math.floor(min.x / axes.grid.x) * axes.grid.x - axes.grid.x;
+  var maxX = Math.floor(max.x / axes.grid.x) * axes.grid.x + axes.grid.x;
+  for(var i = minX; i <= maxX; i++) {
+    var x = coord2pix(i * axes.grid.x, undefined).x;
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, canvas.height);
+  }
+
+  var minY = Math.floor(max.y / axes.grid.y) * axes.grid.y - axes.grid.y;
+  var maxY = Math.floor(min.y / axes.grid.y) * axes.grid.y + axes.grid.y;
+  console.log(minY + ";" + maxY);
+  for(var i = minY; i <= maxY; i++) {
+    var y = coord2pix(undefined, i * axes.grid.y).y;
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+  }
+  ctx.stroke();
+}
+
 function drawGraph (graph) {
  ctx.beginPath();
  if(graph.selected) {
@@ -139,6 +181,8 @@ function drawGraph (graph) {
 
 function drawAxes() {
   ctx.font="10px Arial";
+  ctx.strokeStyle = "rgb(0,0,0)";
+  ctx.fillStyle = "rgb(0,0,0)"; 
 
   axes.x.relPos = (-axes.y.maxVal) / (axes.y.minVal - axes.y.maxVal);
   axes.y.relPos = (-axes.x.minVal) / (axes.x.maxVal - axes.x.minVal);
@@ -223,15 +267,16 @@ function drawAxes() {
 }
 
 function drawCursor() {
-  ctx.font="14px Arial";
   ctx.beginPath();
+  ctx.font="14px Arial";
   ctx.lineWidth = 0.5;
   ctx.strokeStyle = "rgb(0,0,0)";
   ctx.fillStyle = "rgb(0,0,0)"; 
   
   if(axes.cursor.x) {
     ctx.moveTo(0, mouse.relY);
-    ctx.lineTo(canvas.width, mouse.relY);  
+    ctx.lineTo(canvas.width, mouse.relY);
+    ctx.stroke();
   }
 
   if(axes.cursor.y) {
@@ -253,8 +298,6 @@ function drawCursor() {
       ctx.fillText(Math.round(y * 1000) / 1000, mouse.relX, piy - 20);
     }
   }
-
-  ctx.stroke();
 }
 
 function resizeGraph() {
@@ -308,14 +351,18 @@ $(window).mouseup(function(e) {
 $(window).mousemove(function(e){
   mouse.moved = true;
   if(mouse.down) {
-    var deltaX = e.pageX - mouse.x;
-    axes.x.minVal = mouse.minX - deltaX / axes.x.scale;
-    axes.x.maxVal = mouse.maxX - deltaX / axes.x.scale;
+    if(axes.scroll.x) {
+      var deltaX = e.pageX - mouse.x;
+      axes.x.minVal = mouse.minX - deltaX / axes.x.scale;
+      axes.x.maxVal = mouse.maxX - deltaX / axes.x.scale;
+    }
     
-    var deltaY = e.pageY - mouse.y;
-    axes.y.minVal = mouse.minY - deltaY / axes.y.scale;
-    axes.y.maxVal = mouse.maxY - deltaY / axes.y.scale;
-    
+    if(axes.scroll.y) {
+      var deltaY = e.pageY - mouse.y;
+      axes.y.minVal = mouse.minY - deltaY / axes.y.scale;
+      axes.y.maxVal = mouse.maxY - deltaY / axes.y.scale;
+    }
+
     draw();
   }
 });
