@@ -111,7 +111,7 @@ function pix2coord(x, y) {
     coord.x = ((x / axes.x.scale) + axes.x.minVal);
   }
   if(y !== undefined) {
-    coord.y = -((y / axes.y.scale) + axes.y.minVal);
+    coord.y = -((y / axes.y.scale) - axes.y.maxVal);
   }
   return coord;
 }
@@ -122,7 +122,7 @@ function coord2pix(x, y) {
     pix.x = (x - axes.x.minVal) * axes.x.scale;
   }
   if(y !== undefined) {
-    pix.y = ((-y) - axes.y.minVal) * axes.y.scale;
+    pix.y = ((-y) + axes.y.maxVal) * axes.y.scale;
   }
   return pix;
 }
@@ -184,7 +184,7 @@ function drawAxes() {
   ctx.strokeStyle = "rgb(0,0,0)";
   ctx.fillStyle = "rgb(0,0,0)"; 
 
-  axes.x.relPos = (-axes.y.maxVal) / (axes.y.minVal - axes.y.maxVal);
+  axes.x.relPos = (axes.y.minVal) / (axes.y.minVal - axes.y.maxVal);
   axes.y.relPos = (-axes.x.minVal) / (axes.x.maxVal - axes.x.minVal);
   var x = {
     start: {
@@ -359,8 +359,8 @@ $(window).mousemove(function(e){
     
     if(axes.scroll.y) {
       var deltaY = e.pageY - mouse.y;
-      axes.y.minVal = mouse.minY - deltaY / axes.y.scale;
-      axes.y.maxVal = mouse.maxY - deltaY / axes.y.scale;
+      axes.y.minVal = mouse.minY + deltaY / axes.y.scale;
+      axes.y.maxVal = mouse.maxY + deltaY / axes.y.scale;
     }
 
     draw();
