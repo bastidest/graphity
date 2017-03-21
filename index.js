@@ -25,6 +25,7 @@ var axes = {
       },
       color: 'rgb(11,153,11)',
       thickness: 1,
+      selthick: 2,
       bubble: true
     },
     {
@@ -33,6 +34,7 @@ var axes = {
       },
       color: 'rgb(66,44,255)',
       thickness: 1,
+      selthick: 2,
       bubble: false
     },
     {
@@ -41,6 +43,7 @@ var axes = {
       },
       color: 'rgb(255,10,10)',
       thickness: 1,
+      selthick: 2,
       bubble: false
     },
     {
@@ -49,6 +52,7 @@ var axes = {
       },
       color: 'rgb(255,10,10)',
       thickness: 2,
+      selthick: 3,
       bubble: false
     },
   ]
@@ -82,7 +86,7 @@ function draw() {
 
   for(var i = 0; i < axes.graphs.length; i++) {
     var g = axes.graphs[i];
-    drawFunc(g.func, g.color, g.thickness);
+    drawGraph(g);
   }
 }
 
@@ -108,14 +112,19 @@ function coord2pix(x, y) {
   return pix;
 }
 
-function drawFunc (func, color, thick) {
+function drawGraph (graph) {
  ctx.beginPath();
- ctx.lineWidth = thick;
- ctx.strokeStyle = color;
+ if(graph.selected) {
+   ctx.lineWidth = graph.selthick || graph.thickness * 2;
+ } else {
+  ctx.lineWidth = graph.thickness;
+ }
+ 
+ ctx.strokeStyle = graph.color;
 
  for (var pix = 0; pix < canvas.width; pix++) {
   var x = pix2coord(pix, undefined).x;
-  var y = func(x);
+  var y = graph.func(x);
   var piy = coord2pix(undefined, y).y;
 
   if(pix == 0) {
@@ -233,7 +242,7 @@ function drawCursor() {
     var x = pix2coord(mouse.relX, undefined).x;
     for (var i = 0; i < axes.graphs.length; i++) {
       var g = axes.graphs[i];
-      if(!g.bubble) {
+      if(!g.bubble && !g.selected) {
         continue;
       }
       var y = g.func(x);
@@ -261,7 +270,8 @@ var mouse = {
   x: 0,
   y: 0,
   relX: 0,
-  relY: 0
+  relY: 0,
+  moved: true
 }
 
 $('#canvas').mousedown(function(e) {
@@ -272,6 +282,23 @@ $('#canvas').mousedown(function(e) {
   mouse.maxY = axes.y.maxVal;
   mouse.x = e.pageX;
   mouse.y = e.pageY;
+  mouse.moved = false;
+});
+
+$('#canvas').mouseup(function(e) {
+  if(!mouse.moved) {
+    var x = pix2coord(mouse.relX, undefined).x;
+    for (var i = 0; i < axes.graphs.length; i++) {
+      var g = axes.graphs[i];
+      var y = g.func(x);
+      var piy = coord2pix(undefined, y).y;
+      if(mouse.relY > (piy - 8) && mouse.relY < (piy + 8)) {
+        g.selected = !g.selected;
+      } else if(!e.shiftKey) {
+        g.selected = false;
+      }
+    }
+  }
 });
 
 $(window).mouseup(function(e) {
@@ -279,6 +306,7 @@ $(window).mouseup(function(e) {
 });
 
 $(window).mousemove(function(e){
+  mouse.moved = true;
   if(mouse.down) {
     var deltaX = e.pageX - mouse.x;
     axes.x.minVal = mouse.minX - deltaX / axes.x.scale;
