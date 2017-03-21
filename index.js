@@ -81,9 +81,7 @@ CanvasRenderingContext2D.prototype.bubble = function (x, y, w, h, r) {
   return this;
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+function resize() {
   axes.x.scale = canvas.width / Math.abs(axes.x.minVal - axes.x.maxVal);
 
   switch(axes.y.resizeFix) {
@@ -119,7 +117,10 @@ function draw() {
     default:
       axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
   }
-  
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   drawGrid();
   drawAxes();
@@ -327,6 +328,7 @@ function drawCursor() {
 
 function resizeGraph() {
   canvas.width = $(canvas).parent().innerWidth();
+  resize();
   draw();
 }
 
