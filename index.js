@@ -9,29 +9,81 @@ var axes = {
     tickFactor: Math.PI,
     tickLabel: 'π'
   },
-  y : {
+  y: {
     minVal: -5,
     maxVal: 2,
     ticks: 0.5
-  }
+  },
+  cursor: {
+    x: false,
+    y: true
+  },
+  graphs: [
+    {
+      func: function(x) {
+        return Math.sin(x);
+      },
+      color: 'rgb(11,153,11)',
+      thickness: 1,
+      bubble: true
+    },
+    {
+      func: function(x) {
+        return Math.abs(x);
+      },
+      color: 'rgb(66,44,255)',
+      thickness: 1,
+      bubble: false
+    },
+    {
+      func: function(x) {
+        return Math.sin(x + Math.PI * 0.5);
+      },
+      color: 'rgb(255,10,10)',
+      thickness: 1,
+      bubble: false
+    },
+    {
+      func: function(x) {
+        return -0.5 * Math.pow(x, 2) + 2;
+      },
+      color: 'rgb(255,10,10)',
+      thickness: 2,
+      bubble: false
+    },
+  ]
 }
 
-function fun1(x) { return Math.sin(x) }
-function fun2(x) { return Math.abs(x) }
-function fun3(x) { return Math.sin(x + Math.PI * 0.5) }
-function fun4(x) { return -0.5 * Math.pow(x, 2) + 2 }
+CanvasRenderingContext2D.prototype.bubble = function (x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.beginPath();
+  this.moveTo(x+r, y);
+  this.arcTo(x+w, y,   x+w, y+h, r);
+  this.arcTo(x+w, y+h, x,   y+h, r);
+  this.arcTo(x,   y+h, x,   y,   r);
+  this.arcTo(x,   y,   x+w, y,   r);
+  this.closePath();
+  this.moveTo((x + w / 2) - 5, y + h);
+  this.lineTo((x + w / 2) + 5, y + h);
+  this.lineTo((x + w / 2), y + h + 10);
+  return this;
+}
 
 function draw() {
- ctx.clearRect(0, 0, canvas.width, canvas.height);
- 
- axes.x.scale = canvas.width / Math.abs(axes.x.minVal - axes.x.maxVal);
- axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
- 
- drawAxes();
- drawFunc(fun1,"rgb(11,153,11)", 1);
- drawFunc(fun2,"rgb(66,44,255)", 1);
- drawFunc(fun3,"rgb(255,10,10)", 1);
- drawFunc(fun4,"rgb(255,10,10)", 2);
+  ctx.strokeStyle = "rgb(0,0,0)";
+  ctx.fillStyle = "rgb(0,0,0)"; 
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  axes.x.scale = canvas.width / Math.abs(axes.x.minVal - axes.x.maxVal);
+  axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
+
+  drawAxes();
+
+  for(var i = 0; i < axes.graphs.length; i++) {
+    var g = axes.graphs[i];
+    drawFunc(g.func, g.color, g.thickness);
+  }
 }
 
 function pix2coord(x, y) {
@@ -77,6 +129,8 @@ function drawFunc (func, color, thick) {
 }
 
 function drawAxes() {
+  ctx.font="10px Arial";
+
   axes.x.relPos = (-axes.y.maxVal) / (axes.y.minVal - axes.y.maxVal);
   axes.y.relPos = (-axes.x.minVal) / (axes.x.maxVal - axes.x.minVal);
   var x = {
@@ -160,17 +214,37 @@ function drawAxes() {
 }
 
 function drawCursor() {
+  ctx.font="14px Arial";
   ctx.beginPath();
   ctx.lineWidth = 0.5;
-  ctx.strokeStyle = "rgb(0,0,0)"; 
+  ctx.strokeStyle = "rgb(0,0,0)";
+  ctx.fillStyle = "rgb(0,0,0)"; 
   
-  // X-axis
-  ctx.moveTo(0, mouse.relY);
-  ctx.lineTo(canvas.width, mouse.relY);  
-  
-  // Y-axis
-  ctx.moveTo(mouse.relX, 0);
-  ctx.lineTo(mouse.relX, canvas.height);  
+  if(axes.cursor.x) {
+    ctx.moveTo(0, mouse.relY);
+    ctx.lineTo(canvas.width, mouse.relY);  
+  }
+
+  if(axes.cursor.y) {
+    ctx.moveTo(mouse.relX, 0);
+    ctx.lineTo(mouse.relX, canvas.height);
+    ctx.stroke();
+
+    var x = pix2coord(mouse.relX, undefined).x;
+    for (var i = 0; i < axes.graphs.length; i++) {
+      var g = axes.graphs[i];
+      if(!g.bubble) {
+        continue;
+      }
+      var y = g.func(x);
+      var piy = coord2pix(undefined, y).y;
+      ctx.fillStyle = "rgb(0,0,0)";
+      ctx.bubble(mouse.relX - 30, piy - 38, 60, 26, 4).fill();
+      ctx.fillStyle = "rgb(255,255,255)";
+      ctx.fillText(Math.round(y * 1000) / 1000, mouse.relX, piy - 20);
+    }
+  }
+
   ctx.stroke();
 }
 
