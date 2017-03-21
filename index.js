@@ -5,7 +5,7 @@ var axes = {
   x: {
     minVal: -10,
     maxVal: 10,
-    ticks: 1,
+    ticks: 0.5,
     tickFactor: Math.PI,
     tickLabel: 'π'
   },
@@ -18,7 +18,7 @@ var axes = {
 
 function fun1(x) { return Math.sin(x) }
 function fun2(x) { return Math.abs(x) }
-function fun3(x) { return (Math.pow(x, 2) - x - 6) / (Math.pow(x, 2) - 1) }
+function fun3(x) { return Math.sin(x + Math.PI * 0.5) }
 function fun4(x) { return -0.5 * Math.pow(x, 2) + 2 }
 
 function draw() {
@@ -131,7 +131,7 @@ function drawAxes() {
     
     var xTickText = xTick;
     if(axes.x.tickFactor && axes.x.tickLabel) {
-      xTickText = i + axes.x.tickLabel;
+      xTickText = (i * axes.x.ticks) + axes.x.tickLabel;
     }
     ctx.fillText(xTickText, xTickPos, x.start.y + 20);
   }
@@ -151,11 +151,26 @@ function drawAxes() {
     
     var yTickText = yTick;
     if(axes.y.tickFactor && axes.y.tickLabel) {
-      yTickText = i + axes.y.tickLabel;
+      yTickText = (i * axes.y.ticks) + axes.y.tickLabel;
     }
     ctx.fillText(yTickText, y.start.x + 15, yTickPos - 5);
   }
 
+  ctx.stroke();
+}
+
+function drawCursor() {
+  ctx.beginPath();
+  ctx.lineWidth = 0.5;
+  ctx.strokeStyle = "rgb(0,0,0)"; 
+  
+  // X-axis
+  ctx.moveTo(0, mouse.relY);
+  ctx.lineTo(canvas.width, mouse.relY);  
+  
+  // Y-axis
+  ctx.moveTo(mouse.relX, 0);
+  ctx.lineTo(mouse.relX, canvas.height);  
   ctx.stroke();
 }
 
@@ -170,7 +185,9 @@ resizeGraph();
 var mouse = {
   down: false,
   x: 0,
-  y: 0
+  y: 0,
+  relX: 0,
+  relY: 0
 }
 
 $('#canvas').mousedown(function(e) {
@@ -199,6 +216,20 @@ $(window).mousemove(function(e){
     
     draw();
   }
+});
+
+$('#canvas').mousemove(function(e) {
+  if(!mouse.down) {
+    var canvasOffset = $(this).offset(); 
+    mouse.relX = e.pageX - canvasOffset.left;
+    mouse.relY = e.pageY - canvasOffset.top;
+    draw();
+    drawCursor();
+  }
+});
+
+$('#canvas').mouseleave(function(e) {
+  draw();
 });
 
 $('#minValX').change(function(e) {
