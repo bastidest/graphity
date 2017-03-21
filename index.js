@@ -10,13 +10,14 @@ var axes = {
     tickLabel: 'π'
   },
   y: {
-    minVal: -5,
-    maxVal: 2,
-    ticks: 0.5
+    minVal: -3,
+    maxVal: 4,
+    ticks: 0.5,
+    resizeFix: 'center'
   },
   scroll: {
     x: true,
-    y: true
+    y: false
   },
   grid: {
     x: 1,
@@ -85,14 +86,38 @@ function draw() {
 
   axes.x.scale = canvas.width / Math.abs(axes.x.minVal - axes.x.maxVal);
 
-  if(axes.y.minVal && !axes.y.maxVal) {
-    axes.y.scale = axes.x.scale;
-    axes.y.maxVal = axes.y.minVal + canvas.height / axes.y.scale;
-  } else if (!axes.y.minVal && axes.y.maxVal) {
-    axes.y.scale = axes.x.scale;
-    axes.y.minVal = axes.y.maxVal - canvas.height / axes.y.scale;
-  } else {
-    axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
+  switch(axes.y.resizeFix) {
+    case 'bottom':
+      if(isNaN(axes.y.minVal)) {
+        throw new Error('If the resize fix is set to \'bottom\', a minimum value has to be set.')
+      }
+      axes.y.scale = axes.x.scale;
+      axes.y.maxVal = axes.y.minVal + canvas.height / axes.y.scale;
+      break;
+    case 'top':
+      if(isNaN(axes.y.maxVal)) {
+        throw new Error('If the resize fix is set to \'top\', a maximum value has to be set.')
+      }
+      axes.y.scale = axes.x.scale;
+      axes.y.minVal = axes.y.maxVal - canvas.height / axes.y.scale;
+      break;
+    case 'zero':
+      axes.y.scale = axes.x.scale;
+      axes.y.minVal = -(canvas.height / axes.y.scale / 2);
+      axes.y.maxVal = canvas.height / axes.y.scale / 2;
+      break;
+    case 'center':
+      if(isNaN(axes.y.minVal) || isNaN(axes.y.maxVal)) {
+        throw new Error('If the resize fix is set to \'center\', a minimum and a maximum value has to be set.')
+      }
+      var center = (axes.y.minVal + axes.y.maxVal) / 2;
+      axes.y.scale = axes.x.scale;
+      var space = canvas.height / axes.y.scale / 2;
+      axes.y.minVal = center - space;
+      axes.y.maxVal = center + space;
+      break;
+    default:
+      axes.y.scale = canvas.height / Math.abs(axes.y.minVal - axes.y.maxVal);
   }
   
 
@@ -145,7 +170,7 @@ function drawGrid() {
 
   var minY = Math.floor(max.y / axes.grid.y) * axes.grid.y - axes.grid.y;
   var maxY = Math.floor(min.y / axes.grid.y) * axes.grid.y + axes.grid.y;
-  console.log(minY + ";" + maxY);
+
   for(var i = minY; i <= maxY; i++) {
     var y = coord2pix(undefined, i * axes.grid.y).y;
     ctx.moveTo(0, y);
