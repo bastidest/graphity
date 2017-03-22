@@ -8,7 +8,9 @@
       y: 0,
       relX: 0,
       relY: 0,
-      moved: true
+      isMoved: function(x, y) {
+        return !(this.x == x && this.y == y);
+      }
     }
     var settings;
 
@@ -132,28 +134,31 @@
     }
 
     function drawGraph (graph) {
-    ctx.beginPath();
-    if(graph.selected) {
-      ctx.lineWidth = graph.selthick || graph.thickness * 2;
-    } else {
-      ctx.lineWidth = graph.thickness;
-    }
-    
-    ctx.strokeStyle = graph.color;
-
-    for (var pix = 0; pix < canvas.width; pix++) {
-      var x = pix2coord(pix, undefined).x;
-      var y = graph.func(x);
-      var piy = coord2pix(undefined, y).y;
-
-      if(pix == 0) {
-        ctx.moveTo(pix, piy);
-      } else {
-        ctx.lineTo(pix, piy);
+      if(!graph.visible) {
+        return;
       }
-    }
-    
-    ctx.stroke();
+      ctx.beginPath();
+      if(graph.selected) {
+        ctx.lineWidth = graph.selthick || graph.thickness * 2;
+      } else {
+        ctx.lineWidth = graph.thickness;
+      }
+      
+      ctx.strokeStyle = graph.color;
+
+      for (var pix = 0; pix < canvas.width; pix++) {
+        var x = pix2coord(pix, undefined).x;
+        var y = graph.func(x);
+        var piy = coord2pix(undefined, y).y;
+
+        if(pix == 0) {
+          ctx.moveTo(pix, piy);
+        } else {
+          ctx.lineTo(pix, piy);
+        }
+      }
+      
+      ctx.stroke();
     }
 
     function drawAxes() {
@@ -283,6 +288,12 @@
       draw();
     }
 
+    for(var i = 0; i < settings.graphs.length; i++) {
+      if(settings.graphs[i].visible === undefined) {
+        settings.graphs[i].visible = true;
+      }
+    }
+
     $(window).on('resize', resizeGraph);
     resizeGraph();
 
@@ -294,14 +305,16 @@
       mouse.maxY = settings.axes.y.maxVal;
       mouse.x = e.pageX;
       mouse.y = e.pageY;
-      mouse.moved = false;
     });
 
     this.mouseup(function(e) {
-      if(!mouse.moved) {
+      if(!mouse.isMoved(e.pageX, e.pageY)) {
         var x = pix2coord(mouse.relX, undefined).x;
         for (var i = 0; i < settings.graphs.length; i++) {
           var g = settings.graphs[i];
+          if(!g.visible) {
+            continue;
+          }
           var y = g.func(x);
           var piy = coord2pix(undefined, y).y;
           if(mouse.relY > (piy - 8) && mouse.relY < (piy + 8)) {
@@ -318,7 +331,6 @@
     });
 
     $(window).mousemove(function(e){
-      mouse.moved = true;
       if(mouse.down) {
         if(settings.scroll.x) {
           var deltaX = e.pageX - mouse.x;
