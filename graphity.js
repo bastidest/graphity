@@ -250,7 +250,6 @@
 
     function drawCursor() {
       ctx.beginPath();
-      ctx.font="14px Arial";
       ctx.lineWidth = 0.5;
       ctx.strokeStyle = "rgb(0,0,0)";
       ctx.fillStyle = "rgb(0,0,0)"; 
@@ -267,6 +266,24 @@
         ctx.stroke();
 
         var x = pix2coord(mouse.relX, undefined).x;
+
+        ctx.beginPath();
+        ctx.fillStyle = "rgb(0,0,0)"; 
+        ctx.moveTo(mouse.relX - 22, 0);
+        ctx.lineTo(mouse.relX + 22, 0);
+        ctx.lineTo(mouse.relX + 22, 22);
+        ctx.lineTo(mouse.relX + 6, 22);
+        ctx.lineTo(mouse.relX, 28);
+        ctx.lineTo(mouse.relX - 6, 22);
+        ctx.lineTo(mouse.relX - 22, 22);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.font="12px Arial";
+        ctx.fillStyle = "rgb(255,255,255)";
+        ctx.fillText(Math.round(x * 1000) / 1000, mouse.relX, 15);
+        ctx.fill();
+
+        ctx.font="14px Arial";
         for (var i = 0; i < settings.graphs.length; i++) {
           var g = settings.graphs[i];
           if(!g.visible || !g.bubble && !g.selected) {
