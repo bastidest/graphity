@@ -269,7 +269,7 @@
         var x = pix2coord(mouse.relX, undefined).x;
         for (var i = 0; i < settings.graphs.length; i++) {
           var g = settings.graphs[i];
-          if(!g.bubble && !g.selected) {
+          if(!g.visible || !g.bubble && !g.selected) {
             continue;
           }
           var y = g.func(x);
@@ -362,8 +362,11 @@
       draw();
     });
 
+    this.update = function() {
+      draw();
+    };
+
     return this;
   };
-
 
 }(jQuery));
