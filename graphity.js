@@ -112,16 +112,16 @@
       var min = pix2coord(0, 0);
       var max = pix2coord(canvas.width, canvas.height);
 
-      var minX = Math.floor(min.x / settings.grid.x) * settings.grid.x - settings.grid.x;
-      var maxX = Math.floor(max.x / settings.grid.x) * settings.grid.x + settings.grid.x;
+      var minX = Math.floor(min.x / settings.grid.x) - 1;
+      var maxX = Math.ceil(max.x / settings.grid.x) + 1;
       for(var i = minX; i <= maxX; i++) {
         var x = coord2pix(i * settings.grid.x, undefined).x;
         ctx.moveTo(x, 0);
         ctx.lineTo(x, canvas.height);
       }
 
-      var minY = Math.floor(max.y / settings.grid.y) * settings.grid.y - settings.grid.y;
-      var maxY = Math.floor(min.y / settings.grid.y) * settings.grid.y + settings.grid.y;
+      var minY = Math.floor(max.y / settings.grid.y) - 1;
+      var maxY = Math.ceil(min.y / settings.grid.y) + 1;
 
       for(var i = minY; i <= maxY; i++) {
         var y = coord2pix(undefined, i * settings.grid.y).y;
